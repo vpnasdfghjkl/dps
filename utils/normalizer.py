@@ -59,7 +59,7 @@ class LinearNormalizer(nn.Module):
             for key, value in x.items():
                 params = self.params_dict[key]
                 normalized_ret[key] = _normalize(value, params, forward=forward)
-                return normalized_ret
+            return normalized_ret
         else:
             if '_default' not in self.params_dict:
                 raise RuntimeError("Not initialized")
@@ -150,7 +150,7 @@ def _fit(data: Union[torch.Tensor, np.ndarray, zarr.Array],
     
     
 if __name__ == "__main__":
-    replay_buffer = ReplayBuffer.create_empty_zarr('./exam_zarr')
+    replay_buffer = ReplayBuffer.copy_from_path('./exam_zarr')
     
     data = {
         'item1':np.random.randn(3),
@@ -164,18 +164,21 @@ if __name__ == "__main__":
         data_dict[key] = np.stack([x[key] for x in datan])
     
     replay_buffer.add_episode(data_dict)
-    
+    data = replay_buffer.get_episode(0)
+    for k, v in data.items():
+        print(v.shape)
     # data_exam = replay_buffer.get_episode(2)
-    data_exam = replay_buffer.get_episode_idxs()
-    print(data_exam)
+    # data_exam = replay_buffer.get_episode_idxs()
+    # print(data_exam)
     # z_root = zarr.group()
     # agent_pos = z_root.create_group('agent_pos')
     # agent_pos.require_dataset('rotate',data, shape= data.shape)
     # print(z_root.tree())
     # print(data.mean(axis = 0))
     # print(data.std(axis = 0))
-    # normalizer = LinearNormalizer()
-    # normalizer.fit(data,mode='gaussian',last_n_dims=1)
-    # datan = normalizer.normalize(data)
-    # print(datan.mean(axis = 0))
-    # print(datan.std(axis = 0))
+    normalizer = LinearNormalizer()
+    normalizer.fit(data,mode='gaussian',last_n_dims=1)
+    print(data.keys())
+    
+    datan = normalizer.normalize(data)
+    print(datan.keys())
